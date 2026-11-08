@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 
+export const dynamic = "force-dynamic";
+
 // GET es público (lo usa la tienda). POST requiere sesión de admin
 // (aplicado en middleware.ts para cualquier método != GET bajo /api/products).
 

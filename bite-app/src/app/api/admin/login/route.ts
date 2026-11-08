@@ -11,6 +11,8 @@ import {
   verifyAdminCode
 } from "@/lib/auth";
 
+export const dynamic = "force-dynamic";
+
 const schema = z.object({ code: z.string() });
 
 function clientIp(req: NextRequest): string {

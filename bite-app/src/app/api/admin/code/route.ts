@@ -3,6 +3,8 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { hashAdminCode, isValidCodeFormat, verifyAdminCode } from "@/lib/auth";
 
+export const dynamic = "force-dynamic";
+
 const schema = z.object({ currentCode: z.string(), newCode: z.string(), repeatCode: z.string() });
 
 export async function PATCH(req: NextRequest) {

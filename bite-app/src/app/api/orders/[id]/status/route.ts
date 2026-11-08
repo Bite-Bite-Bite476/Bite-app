@@ -3,6 +3,8 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { FINAL_STATUSES } from "@/lib/types";
 
+export const dynamic = "force-dynamic";
+
 const schema = z.object({ status: z.enum(["PENDIENTE", "PREPARANDO", "LISTA", "ENTREGADA", "CANCELADA"]) });
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {

@@ -4,6 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { validateWindowId, DAY_NAMES } from "@/lib/schedule";
 import { sendOrderConfirmationEmail } from "@/lib/email";
 
+export const dynamic = "force-dynamic";
+
 /**
  * Checkout. Reglas de negocio, todas revalidadas en el servidor:
  * 1. El correo debe tener forma válida.
