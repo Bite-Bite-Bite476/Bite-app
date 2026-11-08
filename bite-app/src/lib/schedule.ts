@@ -99,11 +99,19 @@ export function getScheduleStatus(date: Date = new Date()): ScheduleStatus {
 }
 
 /**
- * Valida que un windowId siga siendo una franja abierta AHORA MISMO, según el
- * reloj del servidor. Se llama desde el endpoint de checkout — nunca confíes
- * en la franja que mande el cliente sin revalidarla aquí.
+ * Valida un windowId contra el reloj del servidor — nunca confíes en la
+ * franja que mande el cliente sin revalidarla aquí. Se puede pedir en
+ * cualquier momento: si la franja elegida sigue abierta hoy, se usa tal
+ * cual; si hoy ya no queda ninguna (o es fin de semana), solo se acepta la
+ * única franja "próxima" que el propio servidor calculó — así el pedido
+ * nunca se bloquea, simplemente cae en la siguiente entrega disponible.
  */
 export function validateWindowId(windowId: string, date: Date = new Date()): DeliveryWindow | null {
   const status = getScheduleStatus(date);
-  return status.openWindows.find((w) => w.id === windowId) || null;
+  const todayMatch = status.openWindows.find((w) => w.id === windowId);
+  if (todayMatch) return todayMatch;
+  if (status.openWindows.length === 0 && status.next && status.next.window.id === windowId) {
+    return status.next.window;
+  }
+  return null;
 }

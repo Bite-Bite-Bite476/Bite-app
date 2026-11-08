@@ -132,9 +132,10 @@ El límite de 5 intentos / 60 s en `src/lib/auth.ts` vive en memoria del proceso
   - **Productos:** alta/edición/baja, foto real, precio, stock, categoría y estado (Disponible/Próximamente).
   - **Ubicaciones:** alta/baja, activar o desactivar del sorteo de entrega.
   - **Ajustes:** cambio del código de acceso.
+- **Chat por pedido, sin login del cliente** (`/mi-pedido`): el cliente escribe su correo + el código del pedido (el mismo que recibió al confirmar la compra) y entra a un hilo privado para esa orden. Cada request a `/api/chat/*` vuelve a validar correo + código — no hay sesión ni cookie del lado del cliente. Desde el panel (`Órdenes → Detalle` de una orden), el equipo ve el mismo hilo, responde y el pedido muestra una insignia naranja con los mensajes sin leer. Ambos lados refrescan por sondeo cada 5 s (sin WebSockets, para mantenerlo simple en Vercel serverless).
 
 ## Próximos pasos sugeridos
 
 - Cuentas individuales para el equipo de administración (hoy es un código compartido), si se necesita trazabilidad por persona.
 - Panel de reportes exportable a Excel (puede apoyarse en los mismos datos de `/api/orders`).
-- Notificación por WhatsApp/SMS además del correo, para el aviso de "pedido listo".
+- Notificación por WhatsApp/SMS además del correo, para el aviso de "pedido listo" y para avisar de mensajes nuevos en el chat.

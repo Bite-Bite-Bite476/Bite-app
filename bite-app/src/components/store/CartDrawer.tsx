@@ -26,7 +26,9 @@ export default function CartDrawer({
 }) {
   const total = lines.reduce((a, l) => a + l.product.priceCop * l.qty, 0);
   const count = lines.reduce((a, l) => a + l.qty, 0);
-  const canOrder = lines.length > 0 && !!schedule && schedule.openWindows.length > 0;
+  // Se puede pedir en cualquier momento: si hoy ya no quedan franjas, el
+  // pedido simplemente queda listo para la próxima (ver CheckoutFlow).
+  const canOrder = lines.length > 0 && !!schedule;
 
   return (
     <>
@@ -108,8 +110,8 @@ export default function CartDrawer({
           </div>
           {schedule && schedule.openWindows.length === 0 && (
             <p className="rounded-lg bg-bite-sand px-3 py-2 text-sm">
-              {schedule.isWeekend ? "Hoy no hay entregas." : "Las franjas de hoy ya cerraron."} Vuelve a intentarlo en el próximo horario de
-              entrega.
+              {schedule.isWeekend ? "Hoy no hay entregas." : "Las franjas de hoy ya cerraron."} Puedes pedir igual — tu pedido queda listo
+              para la próxima franja de entrega.
             </p>
           )}
           <button

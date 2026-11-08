@@ -15,6 +15,7 @@ type OrderResult = {
   emailSent: boolean;
 };
 
+const DAY_NAMES = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
 function cap(s: string) {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
@@ -31,7 +32,7 @@ export default function CheckoutFlow({
   onOrderPlaced: () => void;
 }) {
   const [email, setEmail] = useState("");
-  const [windowId, setWindowId] = useState(schedule.openWindows[0]?.id || "");
+  const [windowId, setWindowId] = useState(schedule.openWindows[0]?.id || schedule.next?.window.id || "");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<OrderResult | null>(null);
@@ -106,38 +107,53 @@ export default function CheckoutFlow({
                   className="rounded-lg border-[1.5px] border-bite-sand bg-white px-3 py-2.5 text-base font-normal focus:border-bite-black focus:outline-none"
                 />
               </label>
-              <fieldset className="flex flex-col gap-2">
-                <legend className="mb-1 text-sm font-bold">Franja de entrega · hoy</legend>
-                {schedule.openWindows.map((w) => (
-                  <label
-                    key={w.id}
-                    htmlFor={`w-${w.id}`}
-                    className={`flex items-center gap-3 rounded-lg border-[1.5px] bg-white px-3.5 py-3 ${
-                      windowId === w.id ? "border-bite-black ring-1 ring-bite-black" : "border-bite-sand"
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      id={`w-${w.id}`}
-                      name="win"
-                      value={w.id}
-                      checked={windowId === w.id}
-                      onChange={() => setWindowId(w.id)}
-                      className="h-[18px] w-[18px] accent-bite-orange"
-                    />
-                    <span>
-                      <b className="font-display text-lg tabular">{w.label}</b>
-                      <br />
-                      <span className="text-xs text-bite-stone">
-                        Pedidos hasta las {String(Math.floor((w.end - 5) / 60)).padStart(2, "0")}:{String((w.end - 5) % 60).padStart(2, "0")}
+              {schedule.openWindows.length > 0 ? (
+                <fieldset className="flex flex-col gap-2">
+                  <legend className="mb-1 text-sm font-bold">Franja de entrega · hoy</legend>
+                  {schedule.openWindows.map((w) => (
+                    <label
+                      key={w.id}
+                      htmlFor={`w-${w.id}`}
+                      className={`flex items-center gap-3 rounded-lg border-[1.5px] bg-white px-3.5 py-3 ${
+                        windowId === w.id ? "border-bite-black ring-1 ring-bite-black" : "border-bite-sand"
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        id={`w-${w.id}`}
+                        name="win"
+                        value={w.id}
+                        checked={windowId === w.id}
+                        onChange={() => setWindowId(w.id)}
+                        className="h-[18px] w-[18px] accent-bite-orange"
+                      />
+                      <span>
+                        <b className="font-display text-lg tabular">{w.label}</b>
+                        <br />
+                        <span className="text-xs text-bite-stone">
+                          Pedidos hasta las {String(Math.floor((w.end - 5) / 60)).padStart(2, "0")}:{String((w.end - 5) % 60).padStart(2, "0")}
+                        </span>
                       </span>
-                    </span>
-                    {schedule.current?.id === w.id && (
-                      <span className="ml-auto rounded-full bg-bite-orange px-2.5 py-1 text-xs font-bold">En curso</span>
-                    )}
-                  </label>
-                ))}
-              </fieldset>
+                      {schedule.current?.id === w.id && (
+                        <span className="ml-auto rounded-full bg-bite-orange px-2.5 py-1 text-xs font-bold">En curso</span>
+                      )}
+                    </label>
+                  ))}
+                </fieldset>
+              ) : schedule.next ? (
+                <div className="rounded-lg border-[1.5px] border-bite-sand bg-white px-3.5 py-3">
+                  <p className="text-sm font-bold">
+                    {schedule.isWeekend ? "Hoy no hay entregas" : "Las franjas de hoy ya cerraron"}
+                  </p>
+                  <p className="font-display text-lg tabular">
+                    Próxima entrega: {schedule.next.inDays === 1 ? "mañana" : cap(DAY_NAMES[schedule.next.dow] || "")} ·{" "}
+                    {schedule.next.window.label}
+                  </p>
+                  <p className="mt-1 text-xs text-bite-stone">Puedes pedir igual — queda listo para esa franja.</p>
+                </div>
+              ) : (
+                <p className="font-bold text-bite-bad">No hay franjas de entrega configuradas por ahora.</p>
+              )}
               <p className="text-sm text-bite-stone">
                 Al confirmar te asignamos un punto de entrega y te enviamos el resumen a tu correo.
               </p>
@@ -148,7 +164,7 @@ export default function CheckoutFlow({
               )}
               <button
                 type="submit"
-                disabled={loading}
+                disabled={loading || !windowId}
                 className="w-full rounded-lg bg-bite-orange py-4 font-display text-lg font-bold uppercase tracking-wide text-bite-black disabled:opacity-60"
               >
                 {loading ? "Confirmando…" : `Confirmar pedido · ${money(total)}`}
@@ -199,6 +215,9 @@ function SuccessPanel({ result, onClose }: { result: OrderResult; onClose: () =>
         {result.emailSent
           ? "Te enviamos el resumen a tu correo."
           : "Guardamos tu pedido, pero no pudimos enviar el correo de confirmación — conserva tu código."}
+      </p>
+      <p className="mt-2 text-sm text-bite-stone">
+        ¿Dudas sobre tu pedido? Entra a <b className="text-bite-black">Mi pedido</b> con tu correo y este código para escribirnos.
       </p>
       <button onClick={onClose} className="mt-4 w-full rounded-lg bg-bite-orange py-4 font-display text-lg font-bold uppercase tracking-wide text-bite-black">
         Seguir comprando

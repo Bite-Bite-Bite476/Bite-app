@@ -2,7 +2,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { apiGet, apiSend } from "@/lib/admin-api";
 import { money } from "@/lib/money";
-import { ACTIVE_STATUSES, FINAL_STATUSES, ORDER_STATUS_LABEL, type OrderDTO, type OrderStatus } from "@/lib/types";
+import { ACTIVE_STATUSES, FINAL_STATUSES, ORDER_STATUS_LABEL, type ChatMessageDTO, type OrderDTO, type OrderStatus } from "@/lib/types";
 
 const DAY_NAMES = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
 function cap(s: string) {
@@ -22,6 +22,10 @@ export default function AdminOrdersPage() {
   const [filter, setFilter] = useState("activas");
   const [q, setQ] = useState("");
   const [detail, setDetail] = useState<OrderDTO | null>(null);
+  const [messages, setMessages] = useState<ChatMessageDTO[]>([]);
+  const [newMsg, setNewMsg] = useState("");
+  const [sending, setSending] = useState(false);
+  const [chatError, setChatError] = useState("");
 
   async function load() {
     try {
@@ -33,6 +37,47 @@ export default function AdminOrdersPage() {
   useEffect(() => {
     load();
   }, []);
+
+  // Mientras el detalle de una orden está abierto, carga su chat y lo
+  // refresca cada 5s. Abrir el detalle también marca como leídos los
+  // mensajes del cliente (lo hace el GET en el servidor), así que al cerrar
+  // refrescamos la lista para que desaparezca la insignia de "sin leer".
+  useEffect(() => {
+    if (!detail) return;
+    let cancelled = false;
+    async function poll() {
+      try {
+        const data = await apiGet<ChatMessageDTO[]>(`/api/orders/${detail!.id}/messages`);
+        if (!cancelled) setMessages(data);
+      } catch {
+        // silencioso: el próximo sondeo lo intenta de nuevo
+      }
+    }
+    poll();
+    const id = setInterval(poll, 5000);
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+      load();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [detail?.id]);
+
+  async function sendMessage() {
+    const body = newMsg.trim();
+    if (!body || !detail) return;
+    setSending(true);
+    setChatError("");
+    try {
+      await apiSend(`/api/orders/${detail.id}/messages`, "POST", { body });
+      setNewMsg("");
+      setMessages(await apiGet<ChatMessageDTO[]>(`/api/orders/${detail.id}/messages`));
+    } catch (e) {
+      setChatError(e instanceof Error ? e.message : "No se pudo enviar el mensaje.");
+    } finally {
+      setSending(false);
+    }
+  }
 
   async function changeStatus(id: string, status: OrderStatus) {
     try {
@@ -80,6 +125,13 @@ export default function AdminOrdersPage() {
       () => alert("CSV copiado al portapapeles."),
       () => alert("No se pudo copiar automáticamente. Selecciona y copia desde la consola del navegador.")
     );
+  }
+
+  function closeDetail() {
+    setDetail(null);
+    setMessages([]);
+    setNewMsg("");
+    setChatError("");
   }
 
   if (error) return <p className="text-bite-bad">{error}</p>;
@@ -139,7 +191,19 @@ export default function AdminOrdersPage() {
               <tbody>
                 {filtered.map((o) => (
                   <tr key={o.id} className="hover:bg-[#FBF8F3]">
-                    <td className="border-b border-bite-sand py-2.5 font-display font-bold">{o.code}</td>
+                    <td className="border-b border-bite-sand py-2.5 font-display font-bold">
+                      <span className="inline-flex items-center gap-1.5">
+                        {o.code}
+                        {o.unreadCount > 0 && (
+                          <span
+                            className="grid h-5 min-w-[20px] place-items-center rounded-full bg-bite-orange px-1 text-[11px] font-bold text-bite-black tabular"
+                            title={`${o.unreadCount} mensaje(s) sin leer`}
+                          >
+                            {o.unreadCount}
+                          </span>
+                        )}
+                      </span>
+                    </td>
                     <td className="border-b border-bite-sand py-2.5 tabular">{dtf.format(new Date(o.createdAt))}</td>
                     <td className="border-b border-bite-sand py-2.5">{o.customerEmail}</td>
                     <td className="border-b border-bite-sand py-2.5 tabular">
@@ -177,11 +241,11 @@ export default function AdminOrdersPage() {
       </section>
 
       {detail && (
-        <div onClick={(e) => e.target === e.currentTarget && setDetail(null)} className="fixed inset-0 z-[60] grid place-items-center overflow-auto bg-bite-black/55 p-4">
+        <div onClick={(e) => e.target === e.currentTarget && closeDetail()} className="fixed inset-0 z-[60] grid place-items-center overflow-auto bg-bite-black/55 p-4">
           <div className="max-h-[calc(100%-8px)] w-full max-w-xl overflow-auto rounded-bite bg-bite-cream">
             <div className="flex items-center justify-between px-6 pt-5">
               <h2 className="font-display text-2xl font-extrabold">Orden {detail.code}</h2>
-              <button onClick={() => setDetail(null)} className="h-10 w-10 rounded-lg text-xl font-bold hover:bg-bite-sand">
+              <button onClick={closeDetail} className="h-10 w-10 rounded-lg text-xl font-bold hover:bg-bite-sand">
                 ×
               </button>
             </div>
@@ -224,6 +288,56 @@ export default function AdminOrdersPage() {
                     </li>
                   ))}
                 </ul>
+              </div>
+
+              <div>
+                <b className="text-sm">Mensajes con el cliente</b>
+                <div className="mt-2 flex max-h-64 flex-col gap-2 overflow-y-auto rounded-lg border-[1.5px] border-bite-sand bg-white p-3">
+                  {messages.length === 0 ? (
+                    <p className="text-sm text-bite-stone">Todavía no hay mensajes en este pedido.</p>
+                  ) : (
+                    messages.map((m) => (
+                      <div key={m.id} className={`flex ${m.sender === "ADMIN" ? "justify-end" : "justify-start"}`}>
+                        <div
+                          className={`max-w-[80%] rounded-lg px-3 py-2 text-sm ${
+                            m.sender === "ADMIN" ? "bg-bite-black text-bite-cream" : "bg-bite-sand text-bite-black"
+                          }`}
+                        >
+                          <p className="whitespace-pre-wrap break-words">{m.body}</p>
+                          <span className={`mt-1 block text-[11px] tabular ${m.sender === "ADMIN" ? "text-bite-sand" : "text-bite-stone"}`}>
+                            {dtf.format(new Date(m.createdAt))}
+                          </span>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+                {chatError && (
+                  <p role="alert" className="mt-1.5 text-sm font-bold text-bite-bad">
+                    {chatError}
+                  </p>
+                )}
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    sendMessage();
+                  }}
+                  className="mt-2 flex gap-2"
+                >
+                  <input
+                    value={newMsg}
+                    onChange={(e) => setNewMsg(e.target.value)}
+                    placeholder="Escribe un mensaje para el cliente…"
+                    className="flex-1 rounded-lg border-[1.5px] border-bite-sand bg-white px-3.5 py-2.5"
+                  />
+                  <button
+                    type="submit"
+                    disabled={sending || !newMsg.trim()}
+                    className="rounded-lg bg-bite-orange px-4 py-2.5 font-display text-sm font-bold uppercase tracking-wide text-bite-black disabled:opacity-60"
+                  >
+                    {sending ? "Enviando…" : "Enviar"}
+                  </button>
+                </form>
               </div>
             </div>
           </div>

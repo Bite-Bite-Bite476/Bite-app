@@ -30,6 +30,11 @@ enum OrderStatus {
   CANCELADA
 }
 
+enum ChatSender {
+  ADMIN
+  CUSTOMER
+}
+
 model Product {
   id         String          @id @default(cuid())
   name       String
@@ -75,6 +80,7 @@ model Order {
 
   items        OrderItem[]
   statusEvents OrderStatusEvent[]
+  messages     ChatMessage[]
 
   emailSentAt DateTime?
   emailError  String?
@@ -114,4 +120,19 @@ model AppSettings {
   id            Int      @id @default(1)
   adminCodeHash String   // bcrypt del código de acceso de 10 dígitos
   updatedAt     DateTime @updatedAt
+}
+
+// Chat privado por pedido. El cliente entra sin login (verifica correo +
+// código de pedido en cada request); el panel de administración ve y
+// responde todos los hilos. readByAdmin controla el contador de "sin leer".
+model ChatMessage {
+  id          String     @id @default(cuid())
+  order       Order      @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId     String
+  sender      ChatSender
+  body        String
+  readByAdmin Boolean    @default(false)
+  createdAt   DateTime   @default(now())
+
+  @@index([orderId, createdAt])
 }

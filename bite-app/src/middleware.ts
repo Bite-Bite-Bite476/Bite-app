@@ -11,13 +11,14 @@ export async function middleware(req: NextRequest) {
     pathname.startsWith("/api/admin") &&
     pathname !== "/api/admin/login" &&
     !pathname.startsWith("/api/admin/login/");
+  // Catálogo y ubicaciones: solo las escrituras requieren sesión (la lectura
+  // es pública, la necesita la tienda). Órdenes: TODO requiere sesión,
+  // incluida la lectura — ahí viven correos y pedidos de clientes.
   const isProtectedWriteApi =
-    (pathname.startsWith("/api/products") ||
-      pathname.startsWith("/api/locations") ||
-      pathname.startsWith("/api/orders")) &&
-    req.method !== "GET";
+    (pathname.startsWith("/api/products") || pathname.startsWith("/api/locations")) && req.method !== "GET";
+  const isProtectedOrdersApi = pathname.startsWith("/api/orders");
 
-  if (!isAdminPage && !isAdminApi && !isProtectedWriteApi) return NextResponse.next();
+  if (!isAdminPage && !isAdminApi && !isProtectedWriteApi && !isProtectedOrdersApi) return NextResponse.next();
 
   const token = req.cookies.get(ADMIN_COOKIE.name)?.value;
   const valid = token ? await verifySessionToken(token) : false;
