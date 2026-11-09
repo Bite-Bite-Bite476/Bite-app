@@ -27,6 +27,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: parsed.error.issues[0]?.message || "Datos inválidos." }, { status: 400 });
   }
 
-  await prisma.productSuggestion.create({ data: { body: parsed.data.body } });
+  try {
+    await prisma.productSuggestion.create({ data: { body: parsed.data.body } });
+  } catch (err) {
+    // Si la tabla ProductSuggestion aún no existe en la base de datos
+    // (falta el db push), esto deja un mensaje claro en los logs de
+    // Vercel en vez de un 500 sin explicación.
+    console.error("No se pudo guardar la sugerencia:", err);
+    return NextResponse.json({ error: "No pudimos guardar tu idea en este momento. Intenta más tarde." }, { status: 500 });
+  }
   return NextResponse.json({ ok: true }, { status: 201 });
 }
