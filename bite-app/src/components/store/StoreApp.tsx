@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
-import type { ProductDTO } from "@/lib/types";
+import type { LocationDTO, ProductDTO } from "@/lib/types";
 import type { ScheduleStatus } from "@/lib/schedule";
 import { useCart } from "@/store/cart";
 import StoreNav from "./StoreNav";
@@ -19,6 +19,7 @@ const CATEGORIES = [
 export default function StoreApp() {
   const [products, setProducts] = useState<ProductDTO[]>([]);
   const [schedule, setSchedule] = useState<ScheduleStatus | null>(null);
+  const [locations, setLocations] = useState<LocationDTO[]>([]);
   const [loading, setLoading] = useState(true);
   const [cat, setCat] = useState("todos");
   const [q, setQ] = useState("");
@@ -35,14 +36,23 @@ export default function StoreApp() {
     const res = await fetch("/api/schedule", { cache: "no-store" });
     if (res.ok) setSchedule(await res.json());
   }
+  async function loadLocations() {
+    const res = await fetch("/api/locations", { cache: "no-store" });
+    if (res.ok) {
+      const all: LocationDTO[] = await res.json();
+      setLocations(all.filter((l) => l.active));
+    }
+  }
 
   useEffect(() => {
-    Promise.all([loadProducts(), loadSchedule()]).finally(() => setLoading(false));
+    Promise.all([loadProducts(), loadSchedule(), loadLocations()]).finally(() => setLoading(false));
     const id = setInterval(loadSchedule, 30000);
     const id2 = setInterval(loadProducts, 30000);
+    const id3 = setInterval(loadLocations, 30000);
     return () => {
       clearInterval(id);
       clearInterval(id2);
+      clearInterval(id3);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -85,9 +95,7 @@ export default function StoreApp() {
         <div className="mb-5 flex flex-wrap items-end gap-x-6 gap-y-4">
           <div>
             <h1 className="font-display text-4xl font-extrabold tracking-tight sm:text-5xl">Snacks del día</h1>
-            <p className="mt-1.5 max-w-[60ch] text-bite-stone">
-              Arma tu pedido, elige la franja de entrega y te asignamos el punto donde lo recoges.
-            </p>
+            <p className="mt-1.5 max-w-[60ch] text-bite-stone">Arma tu pedido y elige dónde y cuándo lo recoges.</p>
           </div>
           <div className="ml-auto flex flex-wrap items-center gap-2.5">
             <input
@@ -143,8 +151,8 @@ export default function StoreApp() {
           <div>
             <h2 className="mb-2.5 text-xl font-bold">Cómo funciona</h2>
             <p className="mb-2 text-sm text-bite-stone">1. Agrega tus snacks y abre el carrito.</p>
-            <p className="mb-2 text-sm text-bite-stone">2. Escribe tu correo y elige una franja de hoy.</p>
-            <p className="text-sm text-bite-stone">3. Al confirmar te asignamos un punto de entrega y te llega el resumen por correo.</p>
+            <p className="mb-2 text-sm text-bite-stone">2. Escribe tu correo y elige el punto y la franja de entrega.</p>
+            <p className="text-sm text-bite-stone">3. Al confirmar, te llega el resumen por correo.</p>
           </div>
         </section>
       </main>
@@ -167,6 +175,7 @@ export default function StoreApp() {
         <CheckoutFlow
           lines={lines}
           schedule={schedule}
+          locations={locations}
           onClose={() => setCheckoutOpen(false)}
           onOrderPlaced={() => {
             cart.clear();

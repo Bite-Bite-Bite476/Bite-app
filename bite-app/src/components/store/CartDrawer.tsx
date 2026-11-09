@@ -101,7 +101,7 @@ export default function CartDrawer({
             <span>{money(total)}</span>
           </div>
           <div className="flex justify-between text-sm">
-            <span>Entrega en punto asignado</span>
+            <span>Entrega en el punto que elijas</span>
             <span>Sin costo</span>
           </div>
           <div className="flex justify-between border-t border-bite-sand pt-1.5 font-display text-2xl font-extrabold tabular">

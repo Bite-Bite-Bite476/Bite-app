@@ -60,7 +60,7 @@ export default function AdminLocationsPage() {
     <div>
       <h1 className="font-display text-4xl font-extrabold">Ubicaciones de entrega</h1>
       <p className="mb-6 mt-1 text-bite-stone">
-        Al confirmar cada pedido se asigna al azar uno de los {activeCount} puntos activos.
+        Cada cliente elige uno de los {activeCount} puntos activos al confirmar su pedido.
       </p>
 
       <section className="mb-6 rounded-bite border-[1.5px] border-bite-sand bg-white p-5">

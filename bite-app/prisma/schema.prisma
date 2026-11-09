@@ -55,7 +55,7 @@ model Location {
   id        String      @id @default(cuid())
   name      String
   detail    String
-  active    Boolean     @default(true) // solo las ubicaciones activas entran al sorteo de entrega
+  active    Boolean     @default(true) // solo las ubicaciones activas se ofrecen al cliente para elegir
   createdAt DateTime    @default(now())
   orders    Order[]
 

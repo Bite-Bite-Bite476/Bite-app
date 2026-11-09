@@ -13,8 +13,9 @@ export const dynamic = "force-dynamic";
  *    servidor (nunca confiar en la hora del navegador del cliente).
  * 3. El carrito debe tener stock suficiente en el momento del checkout
  *    (puede haber cambiado desde que el cliente lo armó).
- * 4. Debe existir al menos una ubicación de entrega activa; se asigna una
- *    al azar.
+ * 4. El punto de entrega lo elige el cliente; se revalida que exista y
+ *    siga activo en el momento de confirmar (pudo desactivarse mientras
+ *    armaba el pedido).
  * 5. Todo ocurre dentro de una transacción de base de datos: o se
  *    descuenta el stock y se crea la orden completa, o no se crea nada.
  * 6. El correo de confirmación se envía DESPUÉS de confirmar la escritura;
@@ -26,6 +27,7 @@ const itemSchema = z.object({ productId: z.string().min(1), qty: z.number().int(
 const checkoutSchema = z.object({
   email: z.string().trim().email("Escribe un correo válido."),
   windowId: z.string().min(1, "Elige una franja de entrega."),
+  locationId: z.string().min(1, "Elige un punto de entrega."),
   items: z.array(itemSchema).min(1, "Tu carrito está vacío.")
 });
 
@@ -42,7 +44,7 @@ export async function POST(req: NextRequest) {
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.issues[0]?.message || "Datos inválidos." }, { status: 400 });
   }
-  const { email, windowId, items } = parsed.data;
+  const { email, windowId, locationId, items } = parsed.data;
 
   const win = validateWindowId(windowId);
   if (!win) {
@@ -70,11 +72,10 @@ export async function POST(req: NextRequest) {
         lineData.push({ productId: p.id, nameAtSale: p.name, priceAtSale: p.priceCop, qty: item.qty });
       }
 
-      const activeLocations = await tx.location.findMany({ where: { active: true } });
-      if (activeLocations.length === 0) {
-        throw new CheckoutError("No hay puntos de entrega activos en este momento. Intenta más tarde.");
+      const location = await tx.location.findFirst({ where: { id: locationId, active: true } });
+      if (!location) {
+        throw new CheckoutError("Ese punto de entrega ya no está disponible. Elige otro.");
       }
-      const location = activeLocations[Math.floor(Math.random() * activeLocations.length)]!;
 
       // Descuenta stock de forma atómica y condicional: si otra compra concurrente
       // ya lo consumió, `count` da 0 y abortamos todo con un mensaje claro.

@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import type { ProductDTO } from "@/lib/types";
+import type { LocationDTO, ProductDTO } from "@/lib/types";
 import type { ScheduleStatus } from "@/lib/schedule";
 import { money } from "@/lib/money";
 
@@ -23,16 +23,19 @@ function cap(s: string) {
 export default function CheckoutFlow({
   lines,
   schedule,
+  locations,
   onClose,
   onOrderPlaced
 }: {
   lines: Line[];
   schedule: ScheduleStatus;
+  locations: LocationDTO[];
   onClose: () => void;
   onOrderPlaced: () => void;
 }) {
   const [email, setEmail] = useState("");
   const [windowId, setWindowId] = useState(schedule.openWindows[0]?.id || schedule.next?.window.id || "");
+  const [locationId, setLocationId] = useState(locations[0]?.id || "");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<OrderResult | null>(null);
@@ -50,6 +53,7 @@ export default function CheckoutFlow({
         body: JSON.stringify({
           email,
           windowId,
+          locationId,
           items: lines.map((l) => ({ productId: l.product.id, qty: l.qty }))
         })
       });
@@ -107,6 +111,37 @@ export default function CheckoutFlow({
                   className="rounded-lg border-[1.5px] border-bite-sand bg-white px-3 py-2.5 text-base font-normal focus:border-bite-black focus:outline-none"
                 />
               </label>
+              {locations.length > 0 ? (
+                <fieldset className="flex flex-col gap-2">
+                  <legend className="mb-1 text-sm font-bold">Punto de entrega</legend>
+                  {locations.map((loc) => (
+                    <label
+                      key={loc.id}
+                      htmlFor={`loc-${loc.id}`}
+                      className={`flex items-center gap-3 rounded-lg border-[1.5px] bg-white px-3.5 py-3 ${
+                        locationId === loc.id ? "border-bite-black ring-1 ring-bite-black" : "border-bite-sand"
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        id={`loc-${loc.id}`}
+                        name="loc"
+                        value={loc.id}
+                        checked={locationId === loc.id}
+                        onChange={() => setLocationId(loc.id)}
+                        className="h-[18px] w-[18px] accent-bite-orange"
+                      />
+                      <span>
+                        <b className="font-display text-lg">{loc.name}</b>
+                        <br />
+                        <span className="text-xs text-bite-stone">{loc.detail}</span>
+                      </span>
+                    </label>
+                  ))}
+                </fieldset>
+              ) : (
+                <p className="font-bold text-bite-bad">No hay puntos de entrega disponibles por ahora.</p>
+              )}
               {schedule.openWindows.length > 0 ? (
                 <fieldset className="flex flex-col gap-2">
                   <legend className="mb-1 text-sm font-bold">Franja de entrega · hoy</legend>
@@ -154,9 +189,7 @@ export default function CheckoutFlow({
               ) : (
                 <p className="font-bold text-bite-bad">No hay franjas de entrega configuradas por ahora.</p>
               )}
-              <p className="text-sm text-bite-stone">
-                Al confirmar te asignamos un punto de entrega y te enviamos el resumen a tu correo.
-              </p>
+              <p className="text-sm text-bite-stone">Al confirmar te enviamos el resumen a tu correo.</p>
               {error && (
                 <p role="alert" className="font-bold text-bite-bad">
                   {error}
@@ -164,7 +197,7 @@ export default function CheckoutFlow({
               )}
               <button
                 type="submit"
-                disabled={loading || !windowId}
+                disabled={loading || !windowId || !locationId}
                 className="w-full rounded-lg bg-bite-orange py-4 font-display text-lg font-bold uppercase tracking-wide text-bite-black disabled:opacity-60"
               >
                 {loading ? "Confirmando…" : `Confirmar pedido · ${money(total)}`}

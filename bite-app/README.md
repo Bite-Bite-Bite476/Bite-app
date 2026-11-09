@@ -125,12 +125,12 @@ El límite de 5 intentos / 60 s en `src/lib/auth.ts` vive en memoria del proceso
 ## Flujo de negocio implementado
 
 - **Horarios de entrega** (hora de Bogotá): lunes a jueves 09:45–10:00 y 12:15–13:10; viernes 10:00–10:15 y 12:30–13:15; fin de semana cerrado. Se dejan de aceptar pedidos 5 minutos antes del cierre de cada franja (`CUTOFF_MINUTES` en `src/lib/schedule.ts`).
-- **Checkout:** correo del cliente + franja de hoy disponible → el servidor revalida stock y franja, descuenta inventario, asigna una ubicación activa al azar y envía el correo de confirmación.
+- **Checkout:** correo del cliente + punto de entrega y franja elegidos por el cliente (si hoy ya no quedan franjas abiertas, puede igual pedir para la próxima disponible) → el servidor revalida stock, punto y franja, descuenta inventario y envía el correo de confirmación.
 - **Panel de administración**, protegido por el código de 10 dígitos:
   - **Resumen:** KPIs del día, cola de preparación, unidades vendidas.
   - **Órdenes:** filtro por estado, búsqueda, cambio de estado (Pendiente → Preparando → Lista → Entregada, o Cancelada — cancelar devuelve el stock), detalle con historial, exportar CSV.
   - **Productos:** alta/edición/baja, foto real, precio, stock, categoría y estado (Disponible/Próximamente).
-  - **Ubicaciones:** alta/baja, activar o desactivar del sorteo de entrega.
+  - **Ubicaciones:** alta/baja, activar o desactivar como punto de entrega elegible por el cliente.
   - **Ajustes:** cambio del código de acceso.
 - **Chat por pedido, sin login del cliente** (`/mi-pedido`): el cliente escribe su correo + el código del pedido (el mismo que recibió al confirmar la compra) y entra a un hilo privado para esa orden. Cada request a `/api/chat/*` vuelve a validar correo + código — no hay sesión ni cookie del lado del cliente. Desde el panel (`Órdenes → Detalle` de una orden), el equipo ve el mismo hilo, responde y el pedido muestra una insignia naranja con los mensajes sin leer. Ambos lados refrescan por sondeo cada 5 s (sin WebSockets, para mantenerlo simple en Vercel serverless).
 
