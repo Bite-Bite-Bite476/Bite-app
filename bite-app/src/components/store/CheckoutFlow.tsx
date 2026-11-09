@@ -3,6 +3,8 @@ import { useState } from "react";
 import type { LocationDTO, ProductDTO } from "@/lib/types";
 import type { UpcomingDay } from "@/lib/schedule";
 import { money } from "@/lib/money";
+import { playSuccessSound } from "@/lib/sound";
+import Confetti from "./Confetti";
 
 type Line = { product: ProductDTO; qty: number };
 type OrderResult = {
@@ -70,6 +72,7 @@ export default function CheckoutFlow({
         return;
       }
       setResult(data.order);
+      playSuccessSound();
       onOrderPlaced();
     } catch {
       setError("Falló la conexión. Revisa tu internet e intenta de nuevo.");
@@ -80,6 +83,7 @@ export default function CheckoutFlow({
 
   return (
     <div onClick={(e) => e.target === e.currentTarget && onClose()} className="fixed inset-0 z-[60] grid place-items-center overflow-auto bg-bite-black/55 p-4">
+      {result && <Confetti key={result.code} />}
       <div className="max-h-[calc(100%-8px)] w-full max-w-xl overflow-auto rounded-bite bg-bite-cream shadow-2xl">
         {!result ? (
           <>
@@ -234,7 +238,7 @@ function SuccessPanel({ result, onClose }: { result: OrderResult; onClose: () =>
         </button>
       </div>
       <div className="mt-4 flex items-center gap-3.5">
-        <div className="grid h-16 w-16 flex-none place-items-center rounded-full bg-bite-orange">
+        <div className="grid h-16 w-16 flex-none place-items-center rounded-full bg-bite-orange animate-bump">
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#171717" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
             <path d="M5 12.5l4.5 4.5L19 7.5" />
           </svg>

@@ -5,6 +5,7 @@ import Logo from "@/components/Logo";
 import { money } from "@/lib/money";
 import { ORDER_STATUS_LABEL, type ChatMessageDTO, type OrderSummaryDTO } from "@/lib/types";
 import { formatDeliveryDateLabel } from "@/lib/schedule";
+import { playPingSound } from "@/lib/sound";
 
 const DAY_NAMES = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
 function cap(s: string) {
@@ -27,6 +28,7 @@ export default function MiPedidoPage() {
   const [newMsg, setNewMsg] = useState("");
   const [sending, setSending] = useState(false);
   const credsRef = useRef({ email: "", code: "" });
+  const seenMsgIdsRef = useRef<Set<string>>(new Set());
 
   async function search(e: React.FormEvent) {
     e.preventDefault();
@@ -46,6 +48,7 @@ export default function MiPedidoPage() {
       credsRef.current = { email, code };
       setOrder(data.order);
       setMessages(data.messages);
+      seenMsgIdsRef.current = new Set(data.messages.map((m: ChatMessageDTO) => m.id));
     } catch {
       setError("Falló la conexión. Revisa tu internet e intenta de nuevo.");
     } finally {
@@ -66,7 +69,12 @@ export default function MiPedidoPage() {
         });
         if (res.ok && !cancelled) {
           const data = await res.json();
+          const freshAdmin = data.messages.filter(
+            (m: ChatMessageDTO) => m.sender === "ADMIN" && !seenMsgIdsRef.current.has(m.id)
+          );
+          data.messages.forEach((m: ChatMessageDTO) => seenMsgIdsRef.current.add(m.id));
           setMessages(data.messages);
+          if (freshAdmin.length > 0) playPingSound();
         }
       } catch {
         // silencioso: el próximo sondeo lo intenta de nuevo
@@ -96,6 +104,7 @@ export default function MiPedidoPage() {
         return;
       }
       setNewMsg("");
+      seenMsgIdsRef.current.add(data.message.id);
       setMessages((prev) => [...prev, data.message]);
     } catch {
       setError("Falló la conexión. Revisa tu internet e intenta de nuevo.");
@@ -109,6 +118,7 @@ export default function MiPedidoPage() {
     setMessages([]);
     setError("");
     setNewMsg("");
+    seenMsgIdsRef.current = new Set();
   }
 
   return (
@@ -223,7 +233,7 @@ export default function MiPedidoPage() {
                   <p className="text-sm text-bite-stone">Escríbenos si tienes alguna pregunta sobre tu pedido.</p>
                 ) : (
                   messages.map((m) => (
-                    <div key={m.id} className={`flex ${m.sender === "CUSTOMER" ? "justify-end" : "justify-start"}`}>
+                    <div key={m.id} className={`flex animate-msg-in ${m.sender === "CUSTOMER" ? "justify-end" : "justify-start"}`}>
                       <div
                         className={`max-w-[80%] rounded-lg px-3 py-2 text-sm ${
                           m.sender === "CUSTOMER" ? "bg-bite-orange text-bite-black" : "bg-bite-black text-bite-cream"

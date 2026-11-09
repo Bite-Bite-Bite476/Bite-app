@@ -1,4 +1,5 @@
 "use client";
+import { useState } from "react";
 import type { ProductDTO } from "@/lib/types";
 import { money } from "@/lib/money";
 
@@ -21,6 +22,21 @@ export default function ProductGrid({
   onInc: (p: ProductDTO) => void;
   onDec: (p: ProductDTO) => void;
 }) {
+  const [bumpId, setBumpId] = useState<string | null>(null);
+
+  function bump(id: string) {
+    setBumpId(id);
+    setTimeout(() => setBumpId((cur) => (cur === id ? null : cur)), 420);
+  }
+  function handleAdd(p: ProductDTO) {
+    onAdd(p);
+    bump(p.id);
+  }
+  function handleInc(p: ProductDTO) {
+    onInc(p);
+    bump(p.id);
+  }
+
   if (products.length === 0) {
     return (
       <div className="rounded-bite border-2 border-dashed border-bite-sand p-10 text-center text-bite-stone">
@@ -36,7 +52,11 @@ export default function ProductGrid({
         const qty = qtyOf(p.id);
         return (
           <article key={p.id} className="flex flex-col gap-3">
-            <div className={`relative flex aspect-square items-center justify-center overflow-hidden rounded-2xl bg-bite-card p-4 md:rounded-bite md:p-6`}>
+            <div
+              className={`relative flex aspect-square items-center justify-center overflow-hidden rounded-2xl bg-bite-card p-4 md:rounded-bite md:p-6 ${
+                bumpId === p.id ? "animate-bump" : ""
+              }`}
+            >
               <img
                 src={p.imageUrl}
                 alt={p.name}
@@ -73,7 +93,7 @@ export default function ProductGrid({
                   </button>
                   <span className="min-w-[28px] text-center font-bold tabular">{qty}</span>
                   <button
-                    onClick={() => onInc(p)}
+                    onClick={() => handleInc(p)}
                     disabled={qty >= p.stock}
                     aria-label="Agregar uno"
                     className="h-9 w-9 text-lg font-bold hover:bg-bite-sand disabled:text-bite-sand"
@@ -83,7 +103,7 @@ export default function ProductGrid({
                 </span>
               ) : (
                 <button
-                  onClick={() => onAdd(p)}
+                  onClick={() => handleAdd(p)}
                   className="rounded-lg bg-bite-orange px-4 py-2 font-display text-sm font-bold uppercase tracking-wide text-bite-black hover:bg-[#ff7a4a]"
                 >
                   Agregar

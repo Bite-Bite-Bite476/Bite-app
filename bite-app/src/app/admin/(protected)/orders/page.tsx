@@ -1,9 +1,10 @@
 "use client";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { apiGet, apiSend } from "@/lib/admin-api";
 import { money } from "@/lib/money";
 import { ACTIVE_STATUSES, FINAL_STATUSES, ORDER_STATUS_LABEL, type ChatMessageDTO, type OrderDTO, type OrderStatus } from "@/lib/types";
 import { formatDeliveryDateLabel } from "@/lib/schedule";
+import { playPingSound } from "@/lib/sound";
 
 const DAY_NAMES = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
 function cap(s: string) {
@@ -27,29 +28,54 @@ export default function AdminOrdersPage() {
   const [newMsg, setNewMsg] = useState("");
   const [sending, setSending] = useState(false);
   const [chatError, setChatError] = useState("");
+  const [newUnreadFlash, setNewUnreadFlash] = useState(false);
+  const prevUnreadRef = useRef<number | null>(null);
 
+  // Carga la lista y, si aparecieron mensajes sin leer nuevos desde la
+  // última carga (no en la primera, para no sonar con lo que ya había al
+  // abrir la página), avisa con un sonido suave y un aviso breve.
   async function load() {
     try {
-      setOrders(await apiGet<OrderDTO[]>("/api/orders"));
+      const data = await apiGet<OrderDTO[]>("/api/orders");
+      setOrders(data);
+      const totalUnread = data.reduce((a, o) => a + o.unreadCount, 0);
+      if (prevUnreadRef.current !== null && totalUnread > prevUnreadRef.current) {
+        playPingSound();
+        setNewUnreadFlash(true);
+        setTimeout(() => setNewUnreadFlash(false), 2600);
+      }
+      prevUnreadRef.current = totalUnread;
     } catch (e) {
       setError(e instanceof Error ? e.message : "Error al cargar.");
     }
   }
   useEffect(() => {
     load();
+    const id = setInterval(load, 20000);
+    return () => clearInterval(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Mientras el detalle de una orden está abierto, carga su chat y lo
   // refresca cada 5s. Abrir el detalle también marca como leídos los
   // mensajes del cliente (lo hace el GET en el servidor), así que al cerrar
   // refrescamos la lista para que desaparezca la insignia de "sin leer".
+  // Si llega un mensaje nuevo del cliente mientras el detalle está abierto
+  // (después del primer sondeo), también avisa con sonido.
   useEffect(() => {
     if (!detail) return;
     let cancelled = false;
+    let seen: Set<string> | null = null;
     async function poll() {
       try {
         const data = await apiGet<ChatMessageDTO[]>(`/api/orders/${detail!.id}/messages`);
-        if (!cancelled) setMessages(data);
+        if (cancelled) return;
+        if (seen) {
+          const fresh = data.some((m) => m.sender === "CUSTOMER" && !seen!.has(m.id));
+          if (fresh) playPingSound();
+        }
+        seen = new Set(data.map((m) => m.id));
+        setMessages(data);
       } catch {
         // silencioso: el próximo sondeo lo intenta de nuevo
       }
@@ -141,7 +167,12 @@ export default function AdminOrdersPage() {
   return (
     <div>
       <h1 className="font-display text-4xl font-extrabold">Órdenes</h1>
-      <p className="mb-6 mt-1 text-bite-stone">Cambia el estado desde la tabla. Cancelar una orden devuelve sus unidades al inventario.</p>
+      <p className="mb-2 mt-1 text-bite-stone">Cambia el estado desde la tabla. Cancelar una orden devuelve sus unidades al inventario.</p>
+      {newUnreadFlash && (
+        <p className="mb-4 animate-msg-in rounded-lg bg-bite-orange px-3.5 py-2 text-sm font-bold text-bite-black">
+          📬 Tienes un mensaje nuevo de un cliente.
+        </p>
+      )}
 
       <section className="rounded-bite border-[1.5px] border-bite-sand bg-white p-5">
         <div className="mb-3.5 flex flex-wrap items-center gap-2.5">
@@ -197,7 +228,7 @@ export default function AdminOrdersPage() {
                         {o.code}
                         {o.unreadCount > 0 && (
                           <span
-                            className="grid h-5 min-w-[20px] place-items-center rounded-full bg-bite-orange px-1 text-[11px] font-bold text-bite-black tabular"
+                            className="grid h-5 min-w-[20px] animate-pulse place-items-center rounded-full bg-bite-orange px-1 text-[11px] font-bold text-bite-black tabular"
                             title={`${o.unreadCount} mensaje(s) sin leer`}
                           >
                             {o.unreadCount}
@@ -299,7 +330,7 @@ export default function AdminOrdersPage() {
                     <p className="text-sm text-bite-stone">Todavía no hay mensajes en este pedido.</p>
                   ) : (
                     messages.map((m) => (
-                      <div key={m.id} className={`flex ${m.sender === "ADMIN" ? "justify-end" : "justify-start"}`}>
+                      <div key={m.id} className={`flex animate-msg-in ${m.sender === "ADMIN" ? "justify-end" : "justify-start"}`}>
                         <div
                           className={`max-w-[80%] rounded-lg px-3 py-2 text-sm ${
                             m.sender === "ADMIN" ? "bg-bite-black text-bite-cream" : "bg-bite-sand text-bite-black"

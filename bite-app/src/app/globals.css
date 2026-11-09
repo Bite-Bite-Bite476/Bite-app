@@ -20,3 +20,60 @@ body {
 .tabular {
   font-variant-numeric: tabular-nums;
 }
+
+/* Confeti al confirmar un pedido (ver components/store/Confetti.tsx). */
+@keyframes confetti-fall {
+  0% {
+    transform: translate(0, 0) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--drift, 0px), 115vh) rotate(var(--rotate, 360deg));
+    opacity: 0.85;
+  }
+}
+
+/* "Rebote" corto — al agregar un producto al carrito, en el ícono del carrito, etc. */
+@keyframes bump {
+  0% {
+    transform: scale(1);
+  }
+  35% {
+    transform: scale(1.1);
+  }
+  60% {
+    transform: scale(0.96);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+.animate-bump {
+  animation: bump 0.4s ease;
+}
+
+/* Entrada suave — mensajes de chat nuevos, avisos, íconos de la pantalla de carga. */
+@keyframes msg-in {
+  0% {
+    opacity: 0;
+    transform: translateY(6px) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+.animate-msg-in {
+  animation: msg-in 0.25s ease;
+}
+
+/* Flotación suave — decoración lateral de la pantalla de carga. */
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}

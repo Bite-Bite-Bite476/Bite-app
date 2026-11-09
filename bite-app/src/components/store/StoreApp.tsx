@@ -8,6 +8,7 @@ import ScheduleBand from "./ScheduleBand";
 import ProductGrid from "./ProductGrid";
 import CartDrawer from "./CartDrawer";
 import CheckoutFlow from "./CheckoutFlow";
+import CatalogLoading from "./CatalogLoading";
 
 const CATEGORIES = [
   { id: "todos", label: "Todos" },
@@ -128,7 +129,7 @@ export default function StoreApp() {
         </div>
 
         {loading ? (
-          <div className="py-16 text-center text-bite-stone">Cargando catálogo…</div>
+          <CatalogLoading />
         ) : (
           <ProductGrid products={filtered} qtyOf={(id) => cart.qtyOf(id)} onAdd={addOne} onInc={incOne} onDec={decOne} />
         )}
