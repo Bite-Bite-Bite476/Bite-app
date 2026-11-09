@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { apiGet, apiSend } from "@/lib/admin-api";
 import { money } from "@/lib/money";
 import { ACTIVE_STATUSES, FINAL_STATUSES, ORDER_STATUS_LABEL, type ChatMessageDTO, type OrderDTO, type OrderStatus } from "@/lib/types";
+import { formatDeliveryDateLabel } from "@/lib/schedule";
 
 const DAY_NAMES = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
 function cap(s: string) {
@@ -114,7 +115,7 @@ export default function AdminOrdersPage() {
         o.createdAt,
         o.customerEmail,
         o.items.map((i) => `${i.qty}x ${i.nameAtSale}`).join(" | "),
-        `${DAY_NAMES[o.windowDay]} ${o.windowLabel}`,
+        `${DAY_NAMES[o.windowDay]} ${formatDeliveryDateLabel(new Date(o.createdAt), o.windowDay)} ${o.windowLabel}`,
         o.location.name,
         String(o.totalCop),
         o.status
@@ -207,7 +208,7 @@ export default function AdminOrdersPage() {
                     <td className="border-b border-bite-sand py-2.5 tabular">{dtf.format(new Date(o.createdAt))}</td>
                     <td className="border-b border-bite-sand py-2.5">{o.customerEmail}</td>
                     <td className="border-b border-bite-sand py-2.5 tabular">
-                      {cap(DAY_NAMES[o.windowDay] || "")}
+                      {cap(DAY_NAMES[o.windowDay] || "")} · {formatDeliveryDateLabel(new Date(o.createdAt), o.windowDay)}
                       <br />
                       {o.windowLabel}
                     </td>
@@ -260,7 +261,8 @@ export default function AdminOrdersPage() {
                   <small className="text-xs uppercase text-bite-stone">Entrega</small>
                   <div className="font-bold">{detail.location.name}</div>
                   <span className="text-xs text-bite-stone">
-                    {cap(DAY_NAMES[detail.windowDay] || "")} {detail.windowLabel}
+                    {cap(DAY_NAMES[detail.windowDay] || "")} · {formatDeliveryDateLabel(new Date(detail.createdAt), detail.windowDay)} ·{" "}
+                    {detail.windowLabel}
                   </span>
                 </div>
               </div>

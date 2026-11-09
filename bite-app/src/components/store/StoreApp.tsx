@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import type { LocationDTO, ProductDTO } from "@/lib/types";
-import type { ScheduleStatus } from "@/lib/schedule";
+import type { ScheduleStatus, UpcomingDay } from "@/lib/schedule";
 import { useCart } from "@/store/cart";
 import StoreNav from "./StoreNav";
 import ScheduleBand from "./ScheduleBand";
@@ -19,6 +19,7 @@ const CATEGORIES = [
 export default function StoreApp() {
   const [products, setProducts] = useState<ProductDTO[]>([]);
   const [schedule, setSchedule] = useState<ScheduleStatus | null>(null);
+  const [upcomingDays, setUpcomingDays] = useState<UpcomingDay[]>([]);
   const [locations, setLocations] = useState<LocationDTO[]>([]);
   const [loading, setLoading] = useState(true);
   const [cat, setCat] = useState("todos");
@@ -34,7 +35,11 @@ export default function StoreApp() {
   }
   async function loadSchedule() {
     const res = await fetch("/api/schedule", { cache: "no-store" });
-    if (res.ok) setSchedule(await res.json());
+    if (res.ok) {
+      const data: ScheduleStatus & { upcomingDays: UpcomingDay[] } = await res.json();
+      setSchedule(data);
+      setUpcomingDays(data.upcomingDays);
+    }
   }
   async function loadLocations() {
     const res = await fetch("/api/locations", { cache: "no-store" });
@@ -151,7 +156,7 @@ export default function StoreApp() {
           <div>
             <h2 className="mb-2.5 text-xl font-bold">Cómo funciona</h2>
             <p className="mb-2 text-sm text-bite-stone">1. Agrega tus snacks y abre el carrito.</p>
-            <p className="mb-2 text-sm text-bite-stone">2. Escribe tu correo y elige el punto y la franja de entrega.</p>
+            <p className="mb-2 text-sm text-bite-stone">2. Escribe tu correo y elige el punto, el día y la franja de entrega.</p>
             <p className="text-sm text-bite-stone">3. Al confirmar, te llega el resumen por correo.</p>
           </div>
         </section>
@@ -174,7 +179,7 @@ export default function StoreApp() {
       {checkoutOpen && schedule && (
         <CheckoutFlow
           lines={lines}
-          schedule={schedule}
+          upcomingDays={upcomingDays}
           locations={locations}
           onClose={() => setCheckoutOpen(false)}
           onOrderPlaced={() => {

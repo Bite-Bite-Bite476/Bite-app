@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import type { LocationDTO, ProductDTO } from "@/lib/types";
-import type { ScheduleStatus } from "@/lib/schedule";
+import type { UpcomingDay } from "@/lib/schedule";
 import { money } from "@/lib/money";
 
 type Line = { product: ProductDTO; qty: number };
@@ -10,35 +10,41 @@ type OrderResult = {
   total: number;
   windowDayName: string;
   windowLabel: string;
+  deliveryDateLabel: string;
   location: { name: string; detail: string };
   items: Array<{ nameAtSale: string; priceAtSale: number; qty: number }>;
   emailSent: boolean;
 };
 
-const DAY_NAMES = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
 function cap(s: string) {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
 export default function CheckoutFlow({
   lines,
-  schedule,
+  upcomingDays,
   locations,
   onClose,
   onOrderPlaced
 }: {
   lines: Line[];
-  schedule: ScheduleStatus;
+  upcomingDays: UpcomingDay[];
   locations: LocationDTO[];
   onClose: () => void;
   onOrderPlaced: () => void;
 }) {
   const [email, setEmail] = useState("");
-  const [windowId, setWindowId] = useState(schedule.openWindows[0]?.id || schedule.next?.window.id || "");
+  const [dayIdx, setDayIdx] = useState(0);
+  const [windowId, setWindowId] = useState(upcomingDays[0]?.windows[0]?.id || "");
   const [locationId, setLocationId] = useState(locations[0]?.id || "");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<OrderResult | null>(null);
+
+  function pickDay(idx: number) {
+    setDayIdx(idx);
+    setWindowId(upcomingDays[idx]?.windows[0]?.id || "");
+  }
 
   const total = lines.reduce((a, l) => a + l.product.priceCop * l.qty, 0);
 
@@ -142,50 +148,56 @@ export default function CheckoutFlow({
               ) : (
                 <p className="font-bold text-bite-bad">No hay puntos de entrega disponibles por ahora.</p>
               )}
-              {schedule.openWindows.length > 0 ? (
-                <fieldset className="flex flex-col gap-2">
-                  <legend className="mb-1 text-sm font-bold">Franja de entrega · hoy</legend>
-                  {schedule.openWindows.map((w) => (
-                    <label
-                      key={w.id}
-                      htmlFor={`w-${w.id}`}
-                      className={`flex items-center gap-3 rounded-lg border-[1.5px] bg-white px-3.5 py-3 ${
-                        windowId === w.id ? "border-bite-black ring-1 ring-bite-black" : "border-bite-sand"
-                      }`}
-                    >
-                      <input
-                        type="radio"
-                        id={`w-${w.id}`}
-                        name="win"
-                        value={w.id}
-                        checked={windowId === w.id}
-                        onChange={() => setWindowId(w.id)}
-                        className="h-[18px] w-[18px] accent-bite-orange"
-                      />
-                      <span>
-                        <b className="font-display text-lg tabular">{w.label}</b>
-                        <br />
-                        <span className="text-xs text-bite-stone">
-                          Pedidos hasta las {String(Math.floor((w.end - 5) / 60)).padStart(2, "0")}:{String((w.end - 5) % 60).padStart(2, "0")}
+              {upcomingDays.length > 0 ? (
+                <>
+                  <fieldset className="flex flex-col gap-2">
+                    <legend className="mb-1 text-sm font-bold">Día de entrega</legend>
+                    <div className="flex flex-wrap gap-2">
+                      {upcomingDays.map((d, idx) => (
+                        <button
+                          key={d.dow}
+                          type="button"
+                          onClick={() => pickDay(idx)}
+                          aria-pressed={dayIdx === idx}
+                          className={`rounded-lg border-[1.5px] px-3 py-2 text-sm font-bold ${
+                            dayIdx === idx ? "border-bite-black bg-bite-black text-bite-cream" : "border-bite-sand bg-white"
+                          }`}
+                        >
+                          {d.dateLabel}
+                        </button>
+                      ))}
+                    </div>
+                  </fieldset>
+                  <fieldset className="flex flex-col gap-2">
+                    <legend className="mb-1 text-sm font-bold">Franja de entrega</legend>
+                    {(upcomingDays[dayIdx]?.windows || []).map((w) => (
+                      <label
+                        key={w.id}
+                        htmlFor={`w-${w.id}`}
+                        className={`flex items-center gap-3 rounded-lg border-[1.5px] bg-white px-3.5 py-3 ${
+                          windowId === w.id ? "border-bite-black ring-1 ring-bite-black" : "border-bite-sand"
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          id={`w-${w.id}`}
+                          name="win"
+                          value={w.id}
+                          checked={windowId === w.id}
+                          onChange={() => setWindowId(w.id)}
+                          className="h-[18px] w-[18px] accent-bite-orange"
+                        />
+                        <span>
+                          <b className="font-display text-lg tabular">{w.label}</b>
+                          <br />
+                          <span className="text-xs text-bite-stone">
+                            Pedidos hasta las {String(Math.floor((w.end - 5) / 60)).padStart(2, "0")}:{String((w.end - 5) % 60).padStart(2, "0")}
+                          </span>
                         </span>
-                      </span>
-                      {schedule.current?.id === w.id && (
-                        <span className="ml-auto rounded-full bg-bite-orange px-2.5 py-1 text-xs font-bold">En curso</span>
-                      )}
-                    </label>
-                  ))}
-                </fieldset>
-              ) : schedule.next ? (
-                <div className="rounded-lg border-[1.5px] border-bite-sand bg-white px-3.5 py-3">
-                  <p className="text-sm font-bold">
-                    {schedule.isWeekend ? "Hoy no hay entregas" : "Las franjas de hoy ya cerraron"}
-                  </p>
-                  <p className="font-display text-lg tabular">
-                    Próxima entrega: {schedule.next.inDays === 1 ? "mañana" : cap(DAY_NAMES[schedule.next.dow] || "")} ·{" "}
-                    {schedule.next.window.label}
-                  </p>
-                  <p className="mt-1 text-xs text-bite-stone">Puedes pedir igual — queda listo para esa franja.</p>
-                </div>
+                      </label>
+                    ))}
+                  </fieldset>
+                </>
               ) : (
                 <p className="font-bold text-bite-bad">No hay franjas de entrega configuradas por ahora.</p>
               )}
@@ -241,7 +253,9 @@ function SuccessPanel({ result, onClose }: { result: OrderResult; onClose: () =>
         <div className="rounded-lg border-[1.5px] border-bite-sand bg-white px-3.5 py-3">
           <small className="text-xs font-bold uppercase tracking-wide text-bite-stone">Franja</small>
           <div className="font-display text-lg font-bold tabular">{result.windowLabel}</div>
-          <span className="text-sm text-bite-stone">Hoy {cap(result.windowDayName)}</span>
+          <span className="text-sm text-bite-stone">
+            {cap(result.windowDayName)} · {result.deliveryDateLabel}
+          </span>
         </div>
       </div>
       <p className="mt-4 text-sm text-bite-stone">

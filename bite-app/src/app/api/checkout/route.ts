@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { validateWindowId, DAY_NAMES } from "@/lib/schedule";
+import { validateWindowId, formatDeliveryDateLabel, DAY_NAMES } from "@/lib/schedule";
 import { sendOrderConfirmationEmail } from "@/lib/email";
 
 export const dynamic = "force-dynamic";
@@ -9,8 +9,10 @@ export const dynamic = "force-dynamic";
 /**
  * Checkout. Reglas de negocio, todas revalidadas en el servidor:
  * 1. El correo debe tener forma válida.
- * 2. La franja elegida debe seguir abierta AHORA, según el reloj del
- *    servidor (nunca confiar en la hora del navegador del cliente).
+ * 2. El cliente elige día (dentro de los próximos 7 días) y franja; el
+ *    servidor revalida esa combinación con su propio reloj (nunca confiar
+ *    en la hora del navegador del cliente) — por ejemplo, si eligió "hoy"
+ *    y la franja cerró justo mientras confirmaba.
  * 3. El carrito debe tener stock suficiente en el momento del checkout
  *    (puede haber cambiado desde que el cliente lo armó).
  * 4. El punto de entrega lo elige el cliente; se revalida que exista y
@@ -116,6 +118,7 @@ export async function POST(req: NextRequest) {
       totalCop: result.totalCop,
       windowDay: result.windowDay,
       windowLabel: result.windowLabel,
+      createdAt: result.createdAt,
       location: { name: result.location.name, detail: result.location.detail },
       items: result.items
     });
@@ -133,6 +136,7 @@ export async function POST(req: NextRequest) {
         windowDay: result.windowDay,
         windowDayName: DAY_NAMES[result.windowDay],
         windowLabel: result.windowLabel,
+        deliveryDateLabel: formatDeliveryDateLabel(result.createdAt, result.windowDay),
         location: { name: result.location.name, detail: result.location.detail },
         items: result.items,
         emailSent: emailResult.sent

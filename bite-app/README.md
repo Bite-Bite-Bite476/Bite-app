@@ -125,7 +125,7 @@ El límite de 5 intentos / 60 s en `src/lib/auth.ts` vive en memoria del proceso
 ## Flujo de negocio implementado
 
 - **Horarios de entrega** (hora de Bogotá): lunes a jueves 09:45–10:00 y 12:15–13:10; viernes 10:00–10:15 y 12:30–13:15; fin de semana cerrado. Se dejan de aceptar pedidos 5 minutos antes del cierre de cada franja (`CUTOFF_MINUTES` en `src/lib/schedule.ts`).
-- **Checkout:** correo del cliente + punto de entrega y franja elegidos por el cliente (si hoy ya no quedan franjas abiertas, puede igual pedir para la próxima disponible) → el servidor revalida stock, punto y franja, descuenta inventario y envía el correo de confirmación.
+- **Checkout:** correo del cliente + punto, día (hoy o cualquiera de los próximos 7 días, `DAY_SELECTION_HORIZON_DAYS` en `src/lib/schedule.ts`) y franja, todos elegidos por el cliente → el servidor revalida stock, punto, día y franja, descuenta inventario y envía el correo de confirmación. No se guarda la fecha exacta en la base: como el horizonte es de exactamente 7 días, la fecha real de entrega se reconstruye sin ambigüedad a partir de `createdAt` + el día de la semana elegido (`resolveDeliveryDate`/`formatDeliveryDateLabel`).
 - **Panel de administración**, protegido por el código de 10 dígitos:
   - **Resumen:** KPIs del día, cola de preparación, unidades vendidas.
   - **Órdenes:** filtro por estado, búsqueda, cambio de estado (Pendiente → Preparando → Lista → Entregada, o Cancelada — cancelar devuelve el stock), detalle con historial, exportar CSV.

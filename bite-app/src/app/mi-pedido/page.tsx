@@ -4,6 +4,7 @@ import Link from "next/link";
 import Logo from "@/components/Logo";
 import { money } from "@/lib/money";
 import { ORDER_STATUS_LABEL, type ChatMessageDTO, type OrderSummaryDTO } from "@/lib/types";
+import { formatDeliveryDateLabel } from "@/lib/schedule";
 
 const DAY_NAMES = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
 function cap(s: string) {
@@ -191,7 +192,9 @@ export default function MiPedidoPage() {
                 <div className="rounded-lg bg-bite-sand p-3">
                   <small className="text-xs font-bold uppercase tracking-wide text-bite-stone">Franja</small>
                   <div className="font-bold tabular">{order.windowLabel}</div>
-                  <span className="text-xs text-bite-stone">{cap(DAY_NAMES[order.windowDay] || "")}</span>
+                  <span className="text-xs text-bite-stone">
+                    {cap(DAY_NAMES[order.windowDay] || "")} · {formatDeliveryDateLabel(new Date(order.createdAt), order.windowDay)}
+                  </span>
                 </div>
               </div>
               <div className="mt-3 text-sm">

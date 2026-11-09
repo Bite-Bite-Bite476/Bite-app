@@ -6,7 +6,7 @@
  */
 import { Resend } from "resend";
 import { money } from "./money";
-import { DAY_NAMES } from "./schedule";
+import { DAY_NAMES, formatDeliveryDateLabel } from "./schedule";
 
 type OrderForEmail = {
   code: string;
@@ -14,6 +14,7 @@ type OrderForEmail = {
   totalCop: number;
   windowDay: number;
   windowLabel: string;
+  createdAt: Date;
   location: { name: string; detail: string };
   items: Array<{ nameAtSale: string; priceAtSale: number; qty: number }>;
 };
@@ -48,7 +49,7 @@ function renderEmailHtml(order: OrderForEmail): string {
         <tr><td style="font-size:13px;color:#77736D;">Recoge tu pedido</td></tr>
         <tr><td style="font-size:16px;color:#171717;font-weight:700;padding-top:2px;">${cap(
           DAY_NAMES[order.windowDay] || ""
-        )} · ${escapeHtml(order.windowLabel)}</td></tr>
+        )} ${escapeHtml(formatDeliveryDateLabel(order.createdAt, order.windowDay))} · ${escapeHtml(order.windowLabel)}</td></tr>
         <tr><td style="font-size:15px;color:#171717;padding-top:8px;">${escapeHtml(order.location.name)}</td></tr>
         <tr><td style="font-size:13px;color:#77736D;">${escapeHtml(order.location.detail)}</td></tr>
       </table>
