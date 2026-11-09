@@ -9,6 +9,7 @@ import ProductGrid from "./ProductGrid";
 import CartDrawer from "./CartDrawer";
 import CheckoutFlow from "./CheckoutFlow";
 import CatalogLoading from "./CatalogLoading";
+import SideDecor from "./SideDecor";
 
 const CATEGORIES = [
   { id: "todos", label: "Todos" },
@@ -95,6 +96,7 @@ export default function StoreApp() {
 
   return (
     <>
+      <SideDecor />
       <StoreNav cartCount={cart.count()} onOpenCart={() => setCartOpen(true)} />
       <ScheduleBand status={schedule} />
       <main className="mx-auto max-w-6xl px-5 pb-14 pt-7">

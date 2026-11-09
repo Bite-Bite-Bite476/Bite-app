@@ -53,3 +53,10 @@ export function playPingSound() {
     tone(ctx, 784, now, 0.16, 0.12);
   });
 }
+
+/** Un "pop" breve y juguetón — al tocar la decoración de la tienda. */
+export function playPopSound() {
+  withAudioContext((ctx, now) => {
+    tone(ctx, 520, now, 0.09, 0.14);
+  });
+}

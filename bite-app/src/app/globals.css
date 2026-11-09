@@ -67,7 +67,7 @@ body {
   animation: msg-in 0.25s ease;
 }
 
-/* Flotación suave — decoración lateral de la pantalla de carga. */
+/* Flotación suave — decoración lateral de la pantalla de carga y de la tienda. */
 @keyframes float {
   0%,
   100% {
@@ -76,4 +76,42 @@ body {
   50% {
     transform: translateY(-8px);
   }
+}
+
+/* "Sacudida" juguetona — al tocar un snack decorativo de los costados. */
+@keyframes wobble {
+  0% {
+    transform: rotate(0deg) scale(1);
+  }
+  20% {
+    transform: rotate(-14deg) scale(1.15);
+  }
+  45% {
+    transform: rotate(10deg) scale(1.1);
+  }
+  70% {
+    transform: rotate(-6deg) scale(1.05);
+  }
+  100% {
+    transform: rotate(0deg) scale(1);
+  }
+}
+
+/* "+1" que sube y se desvanece — mismo gesto de tocar un snack decorativo. */
+@keyframes pop-up {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 0) scale(0.6);
+  }
+  25% {
+    opacity: 1;
+    transform: translate(-50%, -6px) scale(1.1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -26px) scale(0.9);
+  }
+}
+.animate-pop-up {
+  animation: pop-up 0.7s ease-out forwards;
 }

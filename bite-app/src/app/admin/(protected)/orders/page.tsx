@@ -32,15 +32,16 @@ export default function AdminOrdersPage() {
   const prevUnreadRef = useRef<number | null>(null);
 
   // Carga la lista y, si aparecieron mensajes sin leer nuevos desde la
-  // última carga (no en la primera, para no sonar con lo que ya había al
-  // abrir la página), avisa con un sonido suave y un aviso breve.
+  // última carga (no en la primera, para no avisar de lo que ya había al
+  // abrir la página), muestra un aviso breve. El sonido de aviso lo pone la
+  // barra de navegación (AdminNav), que vive en todas las páginas del
+  // panel — así no suena dos veces si ya estás viendo Órdenes.
   async function load() {
     try {
       const data = await apiGet<OrderDTO[]>("/api/orders");
       setOrders(data);
       const totalUnread = data.reduce((a, o) => a + o.unreadCount, 0);
       if (prevUnreadRef.current !== null && totalUnread > prevUnreadRef.current) {
-        playPingSound();
         setNewUnreadFlash(true);
         setTimeout(() => setNewUnreadFlash(false), 2600);
       }
