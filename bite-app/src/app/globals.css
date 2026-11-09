@@ -78,6 +78,18 @@ body {
   }
 }
 
+/* Flotación más marcada — decoración lateral de la tienda (más vistosa que
+   la de la pantalla de carga, para que se note de verdad a los costados). */
+@keyframes float-big {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-15px) scale(1.05);
+  }
+}
+
 /* "Sacudida" juguetona — al tocar un snack decorativo de los costados. */
 @keyframes wobble {
   0% {

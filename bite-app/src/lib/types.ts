@@ -56,6 +56,13 @@ export type ChatMessageDTO = {
   createdAt: string;
 };
 
+export type ProductSuggestionDTO = {
+  id: string;
+  body: string;
+  readByAdmin: boolean;
+  createdAt: string;
+};
+
 // Resumen de pedido que puede ver el cliente desde /mi-pedido, sin login.
 // Deliberadamente no incluye el id interno ni nada que no haya visto ya.
 export type OrderSummaryDTO = {

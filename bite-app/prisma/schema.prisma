@@ -136,3 +136,15 @@ model ChatMessage {
 
   @@index([orderId, createdAt])
 }
+
+// Buzón de "quiero este producto" escrito libremente desde la tienda, sin
+// pedido ni cuenta asociada — solo texto + fecha. El panel de administración
+// las lista y las marca como leídas, igual que el chat de pedidos.
+model ProductSuggestion {
+  id          String   @id @default(cuid())
+  body        String
+  readByAdmin Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  @@index([readByAdmin])
+}

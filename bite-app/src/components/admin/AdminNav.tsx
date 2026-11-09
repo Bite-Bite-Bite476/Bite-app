@@ -8,30 +8,29 @@ import { playPingSound } from "@/lib/sound";
 const TABS = [
   { href: "/admin", label: "Resumen" },
   { href: "/admin/orders", label: "Órdenes" },
+  { href: "/admin/sugerencias", label: "Sugerencias" },
   { href: "/admin/products", label: "Productos" },
   { href: "/admin/locations", label: "Ubicaciones" },
   { href: "/admin/settings", label: "Ajustes" }
 ];
 
-export default function AdminNav() {
-  const pathname = usePathname();
-  const router = useRouter();
-  const [unreadCount, setUnreadCount] = useState(0);
-  const prevUnreadRef = useRef<number | null>(null);
+// Pequeño helper: sondea un endpoint de conteo y avisa (sonido) solo cuando
+// el número sube después de la primera carga — igual para órdenes y para
+// sugerencias, cada una con su propia pestaña y su propia insignia.
+function useUnreadBadge(url: string) {
+  const [count, setCount] = useState(0);
+  const prevRef = useRef<number | null>(null);
 
-  // Insignia tipo Teams en la pestaña "Órdenes": cuántos mensajes de
-  // clientes hay sin leer, en toda la tienda. No suena en la primera
-  // carga de la página — solo cuando el número sube mientras ya está abierta.
   useEffect(() => {
     let cancelled = false;
     async function poll() {
       try {
-        const res = await fetch("/api/orders/unread-count", { cache: "no-store" });
+        const res = await fetch(url, { cache: "no-store" });
         if (!res.ok || cancelled) return;
-        const { count } = await res.json();
-        if (prevUnreadRef.current !== null && count > prevUnreadRef.current) playPingSound();
-        prevUnreadRef.current = count;
-        setUnreadCount(count);
+        const data = await res.json();
+        if (prevRef.current !== null && data.count > prevRef.current) playPingSound();
+        prevRef.current = data.count;
+        setCount(data.count);
       } catch {
         // silencioso: el próximo sondeo lo intenta de nuevo
       }
@@ -42,7 +41,19 @@ export default function AdminNav() {
       cancelled = true;
       clearInterval(id);
     };
-  }, []);
+  }, [url]);
+
+  return count;
+}
+
+export default function AdminNav() {
+  const pathname = usePathname();
+  const router = useRouter();
+
+  // Insignia tipo Teams en "Órdenes" (mensajes de clientes sin leer) y en
+  // "Sugerencias" (ideas de producto sin leer) — cada una en toda la tienda.
+  const unreadOrders = useUnreadBadge("/api/orders/unread-count");
+  const unreadSuggestions = useUnreadBadge("/api/admin/suggestions/unread-count");
 
   async function logout() {
     await fetch("/api/admin/logout", { method: "POST" });
@@ -77,7 +88,12 @@ export default function AdminNav() {
         <div className="mx-auto flex max-w-6xl gap-1 overflow-x-auto px-5">
           {TABS.map((t) => {
             const active = t.href === "/admin" ? pathname === "/admin" : pathname.startsWith(t.href);
-            const badge = t.href === "/admin/orders" && unreadCount > 0 ? unreadCount : null;
+            const badge =
+              t.href === "/admin/orders" && unreadOrders > 0
+                ? unreadOrders
+                : t.href === "/admin/sugerencias" && unreadSuggestions > 0
+                  ? unreadSuggestions
+                  : null;
             return (
               <Link
                 key={t.href}
