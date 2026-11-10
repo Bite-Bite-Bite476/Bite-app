@@ -5,6 +5,7 @@ import type { UpcomingDay } from "@/lib/schedule";
 import { money } from "@/lib/money";
 import { playSuccessSound } from "@/lib/sound";
 import Confetti from "./Confetti";
+import CapybaraNudge from "./CapybaraNudge";
 
 type Line = { product: ProductDTO; qty: number };
 type OrderResult = {
@@ -211,13 +212,16 @@ export default function CheckoutFlow({
                   {error}
                 </p>
               )}
-              <button
-                type="submit"
-                disabled={loading || !windowId || !locationId}
-                className="w-full rounded-lg bg-bite-orange py-4 font-display text-lg font-bold uppercase tracking-wide text-bite-black disabled:opacity-60"
-              >
-                {loading ? "Confirmando…" : `Confirmar pedido · ${money(total)}`}
-              </button>
+              <div className="relative">
+                <CapybaraNudge ready={!loading && !!windowId && !!locationId} />
+                <button
+                  type="submit"
+                  disabled={loading || !windowId || !locationId}
+                  className="w-full rounded-lg bg-bite-orange py-4 font-display text-lg font-bold uppercase tracking-wide text-bite-black disabled:opacity-60"
+                >
+                  {loading ? "Confirmando…" : `Confirmar pedido · ${money(total)}`}
+                </button>
+              </div>
             </form>
           </>
         ) : (
