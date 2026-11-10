@@ -5,7 +5,7 @@ import type { UpcomingDay } from "@/lib/schedule";
 import { money } from "@/lib/money";
 import { playSuccessSound } from "@/lib/sound";
 import Confetti from "./Confetti";
-import CapybaraNudge from "./CapybaraNudge";
+import ButterflyNudge from "./ButterflyNudge";
 
 type Line = { product: ProductDTO; qty: number };
 type OrderResult = {
@@ -213,7 +213,7 @@ export default function CheckoutFlow({
                 </p>
               )}
               <div className="relative">
-                <CapybaraNudge ready={!loading && !!windowId && !!locationId} />
+                <ButterflyNudge ready={!loading && !!windowId && !!locationId} />
                 <button
                   type="submit"
                   disabled={loading || !windowId || !locationId}

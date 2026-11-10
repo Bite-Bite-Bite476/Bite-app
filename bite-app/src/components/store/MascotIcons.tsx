@@ -1,6 +1,21 @@
 // Personajes decorativos propios de BITE (misma línea simple y geométrica
-// que SnackIcons) — el capibara del checkout y los "snackers" aleatorios
-// que aparecen y desaparecen en la tienda.
+// que SnackIcons) — la mariposa del checkout y los "snackers" aleatorios
+// (persona, ave o capibara) que aparecen y desaparecen en la tienda.
+export function ButterflyIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="1 0 38 27" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <path d="M19 5Q15 1 13 2" />
+      <path d="M21 5Q25 1 27 2" />
+      <circle cx="20" cy="4.5" r="1.3" fill="currentColor" stroke="none" />
+      <path d="M20 5L20 23" />
+      <path d="M20 6C12 2 3 6 4 13C5 18 13 17 20 13Z" />
+      <path d="M20 6C28 2 37 6 36 13C35 18 27 17 20 13Z" />
+      <path d="M20 13C14 12 7 15 7 20C7 24 13 25 20 21Z" />
+      <path d="M20 13C26 12 33 15 33 20C33 24 27 25 20 21Z" />
+    </svg>
+  );
+}
+
 export function CapybaraIcon({ className }: { className?: string }) {
   return (
     <svg viewBox="4 0 94 44" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className={className}>

@@ -129,9 +129,9 @@ body {
   animation: pop-up 0.7s ease-out forwards;
 }
 
-/* Capibara junto al botón de confirmar pedido: flota y cada pocos segundos
+/* Mariposa junto al botón de confirmar pedido: flota y cada pocos segundos
    se inclina hacia el botón, invitando a tocarlo. */
-@keyframes capy-nudge {
+@keyframes wing-nudge {
   0%,
   100% {
     transform: translateY(0) rotate(0deg);
@@ -155,8 +155,8 @@ body {
     transform: translateY(0) rotate(0deg);
   }
 }
-.animate-capy-nudge {
-  animation: capy-nudge 5s ease-in-out infinite;
+.animate-wing-nudge {
+  animation: wing-nudge 5s ease-in-out infinite;
 }
 
 /* Mordisquito rápido — el bocado que un snacker aleatorio le da a su snack. */
