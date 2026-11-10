@@ -2,12 +2,7 @@
 import { useState } from "react";
 import type { ProductDTO } from "@/lib/types";
 import { money } from "@/lib/money";
-
-function productState(p: ProductDTO) {
-  if (p.status === "PROXIMAMENTE") return { key: "soon" as const, label: "Próximamente", buy: false };
-  if (p.stock <= 0) return { key: "out" as const, label: "Fuera de stock", buy: false };
-  return { key: "ok" as const, label: `${p.stock} en tienda`, buy: true };
-}
+import { productState } from "@/lib/productState";
 
 export default function ProductGrid({
   products,

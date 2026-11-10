@@ -33,10 +33,10 @@ export default function CapybaraNudge({ ready }: { ready: boolean }) {
       className="absolute -top-11 right-1 z-10 grid h-14 w-[68px] place-items-center rounded-2xl bg-bite-sand shadow-[0_8px_16px_-4px_rgba(23,23,23,0.35)]"
       style={{ animation: poked ? "wobble 0.5s ease" : "capy-nudge 5s ease-in-out infinite" }}
     >
-      <CapybaraIcon className="h-8 w-[52px] text-bite-black" />
+      <CapybaraIcon className="h-7 w-14 text-bite-black" />
       {sparkles.map((id) => (
         <span key={id} aria-hidden="true" className="pointer-events-none absolute -top-1 left-1/2 -translate-x-1/2 animate-pop-up text-base">
-          ✨
+          🦋
         </span>
       ))}
     </button>

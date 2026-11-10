@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { LocationDTO, ProductDTO } from "@/lib/types";
 import type { ScheduleStatus, UpcomingDay } from "@/lib/schedule";
+import { availabilityRank } from "@/lib/productState";
 import { useCart } from "@/store/cart";
 import StoreNav from "./StoreNav";
 import ScheduleBand from "./ScheduleBand";
@@ -73,7 +74,11 @@ export default function StoreApp() {
 
   const filtered = useMemo(() => {
     const term = q.trim().toLowerCase();
-    return products.filter((p) => (cat === "todos" || p.category === cat) && (!term || p.name.toLowerCase().includes(term)));
+    return products
+      .filter((p) => (cat === "todos" || p.category === cat) && (!term || p.name.toLowerCase().includes(term)))
+      // Disponible primero, luego agotado, y al final lo que todavía no
+      // está disponible — para que nada comprable quede escondido al final.
+      .sort((a, b) => availabilityRank(a) - availabilityRank(b));
   }, [products, cat, q]);
 
   const lines = useMemo(

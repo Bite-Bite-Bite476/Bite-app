@@ -3,11 +3,20 @@
 // que aparecen y desaparecen en la tienda.
 export function CapybaraIcon({ className }: { className?: string }) {
   return (
-    <svg viewBox="0 0 36 22" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={className}>
-      <path d="M3 16c0-5.2 4-9 10-9h9c6 0 12 3 12 8 0 2.5-2.5 4-6 4H9c-4 0-6-1-6-3z" />
-      <path d="M25.5 7c1.3-2.1 3.8-2.5 5 0" />
-      <circle cx="27" cy="12" r="1" fill="currentColor" stroke="none" />
-      <path d="M8 19v2M14 19.3v1.8M20 19.3v1.8" />
+    <svg viewBox="4 0 94 44" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <path d="M14 21 C10 12 18 7 32 8 C42 9 48 13 53 15 C56 10 60 7 66 7 L82 7 C88 7 92 9 93 13 C95 16 95 19 92 21 C89 23 85 23 81 22 C77 25 75 28 73 31 C60 35 40 35 24 34 C16 34 12 30 12 25 C12 22 13 21 14 21 Z" />
+      <path d="M68 7 C68 2 74 2 74 7" />
+      <circle cx="86" cy="13" r="1.3" fill="currentColor" stroke="none" />
+      <path d="M90 16 Q92.5 17.3 90.5 19" />
+      <path d="M11 25 Q7 26 9 29" />
+      <path d="M74 32 L73 40" />
+      <path d="M70 40 L76 40" />
+      <path d="M80 31 L80 39" />
+      <path d="M77 39 L83 39" />
+      <path d="M18 34 L17 41" />
+      <path d="M14 41 L20 41" />
+      <path d="M25 34 L26 42" />
+      <path d="M23 42 L29 42" />
     </svg>
   );
 }
