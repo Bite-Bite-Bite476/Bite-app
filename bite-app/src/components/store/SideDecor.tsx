@@ -60,9 +60,10 @@ function SideIcon({ spec }: { spec: Spec }) {
       {pops.map((id) => (
         <span
           key={id}
-          className="pointer-events-none absolute -top-2 left-1/2 -translate-x-1/2 animate-pop-up text-base font-bold text-bite-orange"
+          aria-hidden="true"
+          className="pointer-events-none absolute -top-2 left-1/2 -translate-x-1/2 animate-pop-up text-lg"
         >
-          +1
+          ✨
         </span>
       ))}
     </button>
