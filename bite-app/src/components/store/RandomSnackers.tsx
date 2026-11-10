@@ -1,10 +1,10 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { CapybaraIcon, BirdIcon, PersonIcon } from "./MascotIcons";
+import { ButterflyIcon, BirdIcon, PersonIcon } from "./MascotIcons";
 import { CandyIcon } from "./SnackIcons";
 
-type Critter = "capibara" | "ave" | "persona";
-const CRITTERS: Critter[] = ["capibara", "ave", "persona"];
+type Critter = "mariposa" | "ave" | "persona";
+const CRITTERS: Critter[] = ["mariposa", "ave", "persona"];
 const VISIT_MS = 2800;
 
 function randomBetween(min: number, max: number) {
@@ -12,14 +12,14 @@ function randomBetween(min: number, max: number) {
 }
 
 function CritterIcon({ critter, className }: { critter: Critter; className?: string }) {
-  if (critter === "capibara") return <CapybaraIcon className={className} />;
+  if (critter === "mariposa") return <ButterflyIcon className={className} />;
   if (critter === "ave") return <BirdIcon className={className} />;
   return <PersonIcon className={className} />;
 }
 
 /**
  * Easter egg: cada cierto tiempo (al azar, sin patrón fijo) aparece "de la
- * nada" un personaje chiquito — persona, ave o capibara — mordisqueando un
+ * nada" un personaje chiquito — persona, ave o mariposa — mordisqueando un
  * snack en algún punto abajo de la pantalla, y a los pocos segundos
  * desaparece solo. Puramente decorativo (pointer-events-none): no bloquea
  * ni cambia nada del catálogo o el carrito.
@@ -34,7 +34,7 @@ export default function RandomSnackers() {
     function scheduleNext() {
       const delay = randomBetween(18000, 38000);
       timeoutId = setTimeout(() => {
-        const critter = CRITTERS[Math.floor(Math.random() * CRITTERS.length)] ?? "capibara";
+        const critter = CRITTERS[Math.floor(Math.random() * CRITTERS.length)] ?? "mariposa";
         const leftPct = randomBetween(30, 88); // deja libre la esquina donde vive el buzón de sugerencias
         const id = Date.now();
         setVisit({ id, critter, leftPct });

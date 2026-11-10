@@ -109,8 +109,8 @@ body {
   }
 }
 
-/* Destello que sube y se desvanece — al tocar un snack decorativo o al
-   capibara del checkout. */
+/* Destello que sube y se desvanece — al tocar un snack decorativo o la
+   mariposa del checkout. */
 @keyframes pop-up {
   0% {
     opacity: 0;
