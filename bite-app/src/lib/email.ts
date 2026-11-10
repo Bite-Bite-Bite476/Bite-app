@@ -96,3 +96,46 @@ export async function sendOrderConfirmationEmail(
     return { sent: false, error: err instanceof Error ? err.message : "Error desconocido al enviar el correo" };
   }
 }
+
+// Correo de aviso de seguridad — SOLO para notificar un cambio del código
+// de acceso del panel de administración. No se usa para ningún otro fin.
+const ADMIN_RECOVERY_EMAIL = "nicolasrodriguez0409@gmail.com";
+
+/**
+ * Avisa por correo cada vez que alguien cambia el código de administrador,
+ * para que se note de inmediato si no fuiste tú. No bloquea ni revierte el
+ * cambio — solo notifica. Nunca lanza: si falla, queda en consola.
+ */
+export async function sendAdminCodeChangedAlert(changedAt: Date, ip: string): Promise<void> {
+  const apiKey = process.env.RESEND_API_KEY;
+  const from = process.env.RESEND_FROM || "BITE. <onboarding@resend.dev>";
+  if (!apiKey) {
+    console.warn("[email] RESEND_API_KEY no configurada; no se pudo avisar del cambio de código de administrador.");
+    return;
+  }
+  const when = changedAt.toLocaleString("es-CO", { dateStyle: "long", timeStyle: "short", timeZone: "America/Bogota" });
+  try {
+    const resend = new Resend(apiKey);
+    await resend.emails.send({
+      from,
+      to: ADMIN_RECOVERY_EMAIL,
+      subject: "Aviso de seguridad: se cambió el código de administrador de BITE.",
+      html: `<!DOCTYPE html>
+<html lang="es"><body style="margin:0;background:#F5F0E8;font-family:Arial,sans-serif;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:480px;margin:0 auto;background:#F5F0E8;">
+    <tr><td style="background:#171717;padding:20px 24px;">
+      <span style="font-family:Arial,sans-serif;font-weight:900;font-size:22px;color:#FF642D;">BITE.</span>
+    </td></tr>
+    <tr><td style="padding:24px;">
+      <h1 style="font-size:18px;color:#171717;margin:0 0 10px;">Se cambió el código de administrador</h1>
+      <p style="color:#171717;font-size:14px;margin:0 0 6px;">${escapeHtml(when)}</p>
+      <p style="color:#77736D;font-size:13px;margin:0 0 18px;">Dirección de origen: ${escapeHtml(ip)}</p>
+      <p style="color:#171717;font-size:14px;margin:0;">Si fuiste tú, ignora este correo. Si no reconoces este cambio, escríbele a quien administra el sitio cuanto antes.</p>
+    </td></tr>
+  </table>
+</body></html>`
+    });
+  } catch (err) {
+    console.error("[email] No se pudo enviar el aviso de cambio de código de administrador:", err);
+  }
+}

@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { hashAdminCode, isValidCodeFormat, verifyAdminCode } from "@/lib/auth";
+import { sendAdminCodeChangedAlert } from "@/lib/email";
+import { clientIp } from "@/lib/chat-rate-limit";
 
 export const dynamic = "force-dynamic";
 
@@ -23,5 +25,9 @@ export async function PATCH(req: NextRequest) {
 
   const adminCodeHash = await hashAdminCode(newCode);
   await prisma.appSettings.update({ where: { id: 1 }, data: { adminCodeHash } });
+
+  // Aviso de seguridad — nunca bloquea la respuesta si falla el envío.
+  await sendAdminCodeChangedAlert(new Date(), clientIp(req));
+
   return NextResponse.json({ ok: true });
 }
